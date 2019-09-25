@@ -1,6 +1,7 @@
 from typing import AnyStr
 import hashlib
 from functools import wraps
+import os
 
 
 def str_to_byte(func):
@@ -21,11 +22,12 @@ def str_to_byte(func):
 def get_csci_salt() -> bytes:
     """Returns the appropriate salt for CSCI E-29"""
 
-    # import os.path, userena
-    # os.path.dirname(userena.__file__)
+    os.chdir('C:/aPost_Grad/Fall_Class/2019fa-pset-1-patchcasey')
+    print(os.getcwd())
+    print(os.environ)
+    # print(os.getenv('CSCI_SALT'))
 
     # Hint: use os.environment and bytes.fromhex
-    raise NotImplementedError()
 
 @str_to_byte
 def hash_str(some_val: AnyStr, salt: AnyStr = ""):
@@ -43,7 +45,7 @@ def hash_str(some_val: AnyStr, salt: AnyStr = ""):
     m = hashlib.sha256()
     m.update(salt)
     m.update(some_val)
-    print(m.digest().hex()[:6])
+    # print(m.digest().hex()[:6])
     return m.digest()
 
 
@@ -52,4 +54,4 @@ def get_user_id(username: str) -> str:
     return hash_str(username.lower(), salt=salt).hex()[:8]
 
 if __name__ == "__main__":
-    hash_str('world!',salt='hello, ')
+    get_csci_salt()
