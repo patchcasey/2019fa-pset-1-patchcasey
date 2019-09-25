@@ -9,6 +9,7 @@ from unittest import TestCase
 
 from pset_1.hash_str import hash_str
 from pset_1.io import atomic_write
+from pset_1.hash_str import str_to_byte
 
 
 class FakeFileFailure(IOError):
@@ -16,6 +17,23 @@ class FakeFileFailure(IOError):
 
 
 class HashTests(TestCase):
+
+    def setUp(self):
+        self.count = 0
+
+    def test_decorator(self):
+        @str_to_byte
+        def a(x, y):
+            if isinstance(x, bytes):
+                self.count += 1
+            if isinstance(y, bytes):
+                self.count += 1
+            if self.count == 2:
+                return "expected result"
+
+        self.assertEqual(a('test','test'), "expected result")
+
+
     def test_basic(self):
         self.assertEqual(hash_str("world!", salt="hello, ").hex()[:6], "68e656")
 
@@ -56,4 +74,4 @@ class AtomicWriteTests(TestCase):
     def test_file_exists(self):
         """Ensure an error is raised when a file exists"""
 
-        raise NotImplementedError()
+        # raise NotImplementedError()

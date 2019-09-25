@@ -1,13 +1,33 @@
 from typing import AnyStr
+import hashlib
+from functools import wraps
+
+
+def str_to_byte(func):
+    '''
+    decorator adapted from https://forum.kodi.tv/showthread.php?tid=330975
+
+    :param func: func taking string as arg
+    :return: wrapped func
+    '''
+    @wraps(func)
+    def wrapped(*args, **kwargs):
+        new_args = (x.encode() if isinstance(x, str) else x for x in args)
+        new_kwargs = {k: v.encode() if isinstance(v, str) else v for k, v in kwargs.items()}
+        return func(*new_args, **new_kwargs)
+    return wrapped
 
 
 def get_csci_salt() -> bytes:
     """Returns the appropriate salt for CSCI E-29"""
 
+    # import os.path, userena
+    # os.path.dirname(userena.__file__)
+
     # Hint: use os.environment and bytes.fromhex
     raise NotImplementedError()
 
-
+@str_to_byte
 def hash_str(some_val: AnyStr, salt: AnyStr = ""):
     """Converts strings to hash digest
 
@@ -17,10 +37,19 @@ def hash_str(some_val: AnyStr, salt: AnyStr = ""):
 
     :param salt: Add randomness to the hashing
 
+    :rtype: bytes
+
     """
-    raise NotImplementedError()
+    m = hashlib.sha256()
+    m.update(salt)
+    m.update(some_val)
+    print(m.digest().hex()[:6])
+    return m.digest()
 
 
 def get_user_id(username: str) -> str:
     salt = get_csci_salt()
     return hash_str(username.lower(), salt=salt).hex()[:8]
+
+if __name__ == "__main__":
+    hash_str('world!',salt='hello, ')
