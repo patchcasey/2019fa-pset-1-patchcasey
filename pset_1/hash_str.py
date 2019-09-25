@@ -2,7 +2,7 @@ from typing import AnyStr
 import hashlib
 from functools import wraps
 import os
-
+import pprint
 
 def str_to_byte(func):
     '''
@@ -21,10 +21,20 @@ def str_to_byte(func):
 
 def get_csci_salt() -> bytes:
     """Returns the appropriate salt for CSCI E-29"""
+    d = {}
 
-    os.chdir('C:/aPost_Grad/Fall_Class/2019fa-pset-1-patchcasey')
-    print(os.getcwd())
-    print(os.environ)
+    home_dir = os.path.dirname(os.getcwd())
+    env_file = home_dir+'/.env'
+
+    with open(env_file) as f:
+        for line in f:
+            line = line.strip()
+            (key, val) = line.split("=")
+            d[key] = val
+    print(d)
+    cscisalt = d['CSCI_SALT']
+
+
     # print(os.getenv('CSCI_SALT'))
 
     # Hint: use os.environment and bytes.fromhex
