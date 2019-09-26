@@ -21,23 +21,9 @@ def str_to_byte(func):
 
 def get_csci_salt() -> bytes:
     """Returns the appropriate salt for CSCI E-29"""
-    d = {}
 
-    home_dir = os.path.dirname(os.getcwd())
-    env_file = home_dir+'/.env'
-
-    with open(env_file) as f:
-        for line in f:
-            line = line.strip()
-            (key, val) = line.split("=")
-            d[key] = val
-    print(d)
-    cscisalt = d['CSCI_SALT']
-
-
-    # print(os.getenv('CSCI_SALT'))
-
-    # Hint: use os.environment and bytes.fromhex
+    salt_hex = os.getenv('CSCI_SALT')
+    return bytes.fromhex(salt_hex)
 
 @str_to_byte
 def hash_str(some_val: AnyStr, salt: AnyStr = ""):
