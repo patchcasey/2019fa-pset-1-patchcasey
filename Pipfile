@@ -11,6 +11,7 @@ pytest-cov = "*"
 awscli = "*"
 pandas = "*"
 xlrd = "*"
+fastparquet = "*"
 
 [requires]
 python_version = "3.7"
