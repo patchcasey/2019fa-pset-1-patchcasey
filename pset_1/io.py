@@ -28,52 +28,44 @@ def atomic_write(file, mode="w", as_file=True, *args, **kwargs):
             f.write("world!")
 
     """
-    tf = tempfile.NamedTemporaryFile(delete=False, dir=os.getcwd(), suffix=suffix_parser(file))
-    print(args)
-    try:
-        for x in args:
-            tf.write(x.encode())
-    except:
+    # #TODO - check if exists, file of that name
+    # folder = os.listdir(os.path.dirname(file))
+    # temp_name = next(tempfile._get_candidate_names())
+    # print(tf.name)
+    # if os.path.exists(tf.name):
+    #     print('exists')
+
+
+    tf = tempfile.NamedTemporaryFile(delete=False, dir=os.path.dirname(file), suffix=suffix_parser(file))
+
+
+    if as_file == True:
+        try:
+            yield tf
+            tf.seek(0)
+            tf.flush()
+            os.fsync(tf.fileno())
+            tf.close()
+            shutil.copy(tf.name, file)
+            os.remove(tf.name)
+        except:
+            yield tf
+            tf.close()
+            os.remove(tf.name)
+            print('error')
+    else:
+        yield tf
+        tempfile_name = tf.name
         tf.close()
         os.remove(tf.name)
-    finally:
-        tf.seek(0)
-        print(tf.read())
-        tf.flush()
-        os.fsync(tf.fileno())
-        tf.close()
-    shutil.copy(tf.name, file)
-    os.remove(tf.name)
-
-    # if isinstance(file, str):
-    #     yield tempfile.mkstemp(dir=os.getcwd())
-    #         # print(filename)
-    #     # yield open(file, "w+")
-    #
-    # elif isinstance(file, os.PathLike):
-    #     decoded_file = os.fsdecode(file)
-    #     #todo - all of the isinstance(file, str)...
-    #
-    # else:
-    #     #TODO - raise warning here?
-    #     print('Incompatible datatype')
-    #     exit()
-
-    # f = open("hello.txt","w+")
-    # f.write("world!")
-    # f.close()
-    #
-    # ffile = open("hello.txt", "r")
-    # print(ffile.read())
+        return tempfile_name
 
 @contextmanager
 def test():
-    with tempfile.TemporaryDirectory() as tmp:
-        fp = os.path.join(tmp, "asdf.txt")
-
+    cwd = os.getcwd()
+    fp = os.path.join(os.getcwd(), "abcd.txt")
     with atomic_write(fp,"w") as f:
-        f.write("world!")
+        f.write(b"world!")
 
 if __name__ == '__main__':
     test()
-    # atomic_write('test.txt','teststring')

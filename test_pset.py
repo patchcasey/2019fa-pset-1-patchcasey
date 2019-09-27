@@ -48,7 +48,7 @@ class AtomicWriteTests(TestCase):
             with atomic_write(fp, "w") as f:
                 assert not os.path.exists(fp)
                 tmpfile = f.name
-                f.write("asdf")
+                f.write(b"asdf")
 
             assert not os.path.exists(tmpfile)
             assert os.path.exists(fp)
