@@ -8,7 +8,7 @@ from tempfile import TemporaryDirectory
 from unittest import TestCase
 
 from pset_1.hash_str import hash_str
-from pset_1.io import atomic_write
+from pset_1.io_pset1 import atomic_write
 from pset_1.hash_str import str_to_byte
 
 
