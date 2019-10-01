@@ -2,11 +2,14 @@ from contextlib import contextmanager
 import tempfile
 import os
 import shutil
+import time
+
 
 def suffix_parser(input):
     parts = []
-    parts = input.split('.')
-    return '.'+parts[1]
+    parts = input.split(".")
+    return "." + parts[1]
+
 
 @contextmanager
 def atomic_write(file, mode="w", as_file=True, *args, **kwargs):
@@ -35,24 +38,32 @@ def atomic_write(file, mode="w", as_file=True, *args, **kwargs):
     # if os.path.exists(tf.name):
     #     print('exists')
 
-
-    tf = tempfile.NamedTemporaryFile(delete=False, dir=os.path.dirname(file), suffix=suffix_parser(file))
-
+    tf = tempfile.NamedTemporaryFile(
+        delete=False, dir=os.path.dirname(file), suffix=suffix_parser(file)
+    )
+    tf.close()
 
     if as_file == True:
-        try:
-            yield tf
-            tf.seek(0)
-            tf.flush()
-            os.fsync(tf.fileno())
-            tf.close()
-            shutil.copy(tf.name, file)
-            os.remove(tf.name)
-        except:
-            yield tf
-            tf.close()
-            os.remove(tf.name)
-            print('error')
+        with open(tf.name, "w") as poop:
+            try:
+                yield poop
+            except IOError as e:
+                print(poop.name)
+                poop.close()
+                os.remove(poop.name)
+                raise e
+            else:
+                poop.seek(0)
+                poop.flush()
+                os.fsync(poop.fileno())
+                poop.close()
+                try:
+                    os.link(poop.name, file)
+                except FileExistsError as e:
+                    os.remove(poop.name)
+                    raise FileExistsError
+                os.remove(poop.name)
+
     else:
         yield tf
         tempfile_name = tf.name
@@ -60,12 +71,14 @@ def atomic_write(file, mode="w", as_file=True, *args, **kwargs):
         os.remove(tf.name)
         return tempfile_name
 
+
 @contextmanager
 def test():
     cwd = os.getcwd()
-    fp = os.path.join(os.getcwd(), "abcd.txt")
-    with atomic_write(fp,"w") as f:
-        f.write(b"world!")
+    fp = os.path.join(cwd, "zzzz.txt")
+    with atomic_write(fp, "w") as f:
+        f.write("world!")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     test()
