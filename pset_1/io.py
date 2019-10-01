@@ -31,39 +31,34 @@ def atomic_write(file, mode="w", as_file=True, *args, **kwargs):
             f.write("world!")
 
     """
-    # #TODO - check if exists, file of that name
-    # folder = os.listdir(os.path.dirname(file))
-    # temp_name = next(tempfile._get_candidate_names())
-    # print(tf.name)
-    # if os.path.exists(tf.name):
-    #     print('exists')
 
     tf = tempfile.NamedTemporaryFile(
         delete=False, dir=os.path.dirname(file), suffix=suffix_parser(file)
     )
     tf.close()
 
+    # Open temporary file, write to it, atomically close, handling errors in writing process
     if as_file == True:
-        with open(tf.name, "w") as poop:
+        with open(tf.name, "w") as temporaryfile:
             try:
-                yield poop
+                yield temporaryfile
             except IOError as e:
-                print(poop.name)
-                poop.close()
-                os.remove(poop.name)
+                print(temporaryfile.name)
+                temporaryfile.close()
+                os.remove(temporaryfile.name)
                 raise e
             else:
-                poop.seek(0)
-                poop.flush()
-                os.fsync(poop.fileno())
-                poop.close()
+                temporaryfile.seek(0)
+                temporaryfile.flush()
+                os.fsync(temporaryfile.fileno())
+                temporaryfile.close()
                 try:
-                    os.link(poop.name, file)
+                    os.link(temporaryfile.name, file)
                 except FileExistsError as e:
-                    os.remove(poop.name)
+                    os.remove(temporaryfile.name)
                     raise FileExistsError
-                os.remove(poop.name)
-
+                os.remove(temporaryfile.name)
+    # returns name of tempfile as requested
     else:
         yield tf
         tempfile_name = tf.name
