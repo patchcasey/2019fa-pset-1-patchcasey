@@ -1,8 +1,18 @@
 from contextlib import contextmanager
+import tempfile
+import os
+import shutil
+import time
+
+
+def suffix_parser(input):
+    parts = []
+    parts = input.split(".")
+    return "." + parts[1]
 
 
 @contextmanager
-def atomic_write(file, mode="w", as_file=True, **kwargs):
+def atomic_write(file, mode="w", as_file=True, *args, **kwargs):
     """Write a file atomically
 
     :param file: str or :class:`os.PathLike` target to write
@@ -21,4 +31,54 @@ def atomic_write(file, mode="w", as_file=True, **kwargs):
             f.write("world!")
 
     """
-    raise NotImplementedError()
+    # #TODO - check if exists, file of that name
+    # folder = os.listdir(os.path.dirname(file))
+    # temp_name = next(tempfile._get_candidate_names())
+    # print(tf.name)
+    # if os.path.exists(tf.name):
+    #     print('exists')
+
+    tf = tempfile.NamedTemporaryFile(
+        delete=False, dir=os.path.dirname(file), suffix=suffix_parser(file)
+    )
+    tf.close()
+
+    if as_file == True:
+        with open(tf.name, "w") as poop:
+            try:
+                yield poop
+            except IOError as e:
+                print(poop.name)
+                poop.close()
+                os.remove(poop.name)
+                raise e
+            else:
+                poop.seek(0)
+                poop.flush()
+                os.fsync(poop.fileno())
+                poop.close()
+                try:
+                    os.link(poop.name, file)
+                except FileExistsError as e:
+                    os.remove(poop.name)
+                    raise FileExistsError
+                os.remove(poop.name)
+
+    else:
+        yield tf
+        tempfile_name = tf.name
+        tf.close()
+        os.remove(tf.name)
+        return tempfile_name
+
+
+@contextmanager
+def test():
+    cwd = os.getcwd()
+    fp = os.path.join(cwd, "zzzz.txt")
+    with atomic_write(fp, "w") as f:
+        f.write("world!")
+
+
+if __name__ == "__main__":
+    test()

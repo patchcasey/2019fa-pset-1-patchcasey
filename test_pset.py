@@ -6,18 +6,34 @@
 import os
 from tempfile import TemporaryDirectory
 from unittest import TestCase
+import pandas as pd
+import tempfile
 
-from pset_1.hash_str import hash_str
+from pset_1.hash_str import hash_str, str_to_byte, get_csci_salt
 from pset_1.io import atomic_write
-from pset_1.hash_str import str_to_byte
+from pset_1.__main__ import call_getuserid, parquet_conv
 
 
 class FakeFileFailure(IOError):
     pass
 
 
-class HashTests(TestCase):
+class Main_Tests(TestCase):
+    def test_parquet_conv(self):
+        # with tempfile.TemporaryDirectory() as tempdirname:
+        df = pd.DataFrame({"hashed_id": [1, 2, 3, 4, 5]})
+        tf = tempfile.NamedTemporaryFile(delete=False, dir=os.getcwd(), suffix=".csv")
+        tf.close()
+        with open(tf.name) as temp:
+            df.to_csv(temp.name + ".csv")
+            result = parquet_conv(
+                filename=temp.name, cwd=os.getcwd(), datasourceformat=".csv"
+            )
+            print(result)
+            pd.testing.assert_frame_equal(df, result)
 
+
+class HashTests(TestCase):
     def setUp(self):
         self.count = 0
 
@@ -31,11 +47,15 @@ class HashTests(TestCase):
             if self.count == 2:
                 return "expected result"
 
-        self.assertEqual(a('test','test'), "expected result")
-
+        self.assertEqual(a("test", "test"), "expected result")
 
     def test_basic(self):
         self.assertEqual(hash_str("world!", salt="hello, ").hex()[:6], "68e656")
+
+    def test_getcsci(self):
+        os.environ["test_envvar"] = "yes"
+        environ_var = get_csci_salt(keyword="test_envvar", convert_to_bytes="no")
+        self.assertEqual(environ_var, "yes")
 
 
 class AtomicWriteTests(TestCase):
@@ -63,10 +83,11 @@ class AtomicWriteTests(TestCase):
             fp = os.path.join(tmp, "asdf.txt")
 
             with self.assertRaises(FakeFileFailure):
+                # with self.assertRaises(FakeFileFailure):
                 with atomic_write(fp, "w") as f:
                     tmpfile = f.name
                     assert os.path.exists(tmpfile)
-                    raise FakeFileFailure()
+                    raise FakeFileFailure
 
             assert not os.path.exists(tmpfile)
             assert not os.path.exists(fp)
@@ -74,4 +95,13 @@ class AtomicWriteTests(TestCase):
     def test_file_exists(self):
         """Ensure an error is raised when a file exists"""
 
-        # raise NotImplementedError()
+        with TemporaryDirectory() as tmp:
+            fp = os.path.join(tmp, "asdf.txt")
+            existing_file = open(os.path.join(tmp, "asdf.txt"), "w+")
+            existing_file.close()
+
+            with self.assertRaises(FileExistsError):
+                with atomic_write(fp, "w") as f:
+                    print("Running test...")
+                    # assert not os.path.exists(fp)
+                    # tmpfile = f.name
